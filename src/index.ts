@@ -1,26 +1,90 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Bind resources to your worker in `wrangler.jsonc`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import qs from 'qs';
+import { z } from 'zod';
+import { Hono } from 'hono';
+import { Jimp } from 'jimp';
+import { WorkflowEntrypoint, WorkflowStep, WorkflowEvent } from 'cloudflare:workers';
 
-export default {
-	async fetch(request, env, ctx): Promise<Response> {
-		const url = new URL(request.url);
-		switch (url.pathname) {
-			case '/message':
-				return new Response('Hello, World!');
-			case '/random':
-				return new Response(crypto.randomUUID());
-			default:
-				return new Response('Not Found', { status: 404 });
+type Bindings = {
+	R2: R2Bucket;
+	OPTIMIZER: Workflow;
+};
+
+const app = new Hono<{ Bindings: Bindings }>();
+
+app.get('/', (c) => c.text('Hono!'));
+
+app.get('/view/:id', async (c) => {
+	const id = c.req.param('id');
+	const file = await c.env.R2.get(id);
+	return new Response(file!.body);
+});
+
+const Options = z.object({
+	resize: z.object({ w: z.number(), h: z.number() }).optional(),
+	format: z.enum(['bmp', 'gif', 'jpeg', 'png', 'tiff']).optional(),
+	filter: z.object({ greyscale: z.string().optional(), hue: z.number().optional(), saturate: z.number().optional() }).optional(),
+});
+
+type Payload = { options: z.infer<typeof Options>; filetype: 'image/png' | 'image/bmp' | 'image/gif' | 'image/jpeg' | 'image/tiff' };
+
+export class Optimizer extends WorkflowEntrypoint<Env, Payload> {
+	async run(event: WorkflowEvent<Payload>, step: WorkflowStep) {
+		const id = event.instanceId;
+		const filetype = event.payload.filetype;
+		const { resize, format, filter } = event.payload.options;
+
+		if (resize) {
+			await step.do('resize image', async () => {
+				const file = await this.env.R2.get(id);
+				const image = await Jimp.fromBuffer(await file!.arrayBuffer());
+				await image.resize(resize);
+				await this.env.R2.put(id, await image.getBuffer(filetype));
+			});
 		}
-	},
-} satisfies ExportedHandler<Env>;
+
+		if (filter) {
+			await step.do('filter image', async () => {
+				const file = await this.env.R2.get(id);
+				const image = await Jimp.fromBuffer(await file!.arrayBuffer());
+				const fOptions = Object.keys(filter).map((n) => {
+					const fValue = (filter as any)[n];
+					return { apply: n, params: fValue ? [fValue] : undefined };
+				}) as any;
+				await image.color(fOptions);
+				await this.env.R2.put(id, await image.getBuffer(filetype));
+			});
+		}
+
+		if (format) {
+			await step.do('format image', async () => {
+				const file = await this.env.R2.get(id);
+				const image = await Jimp.fromBuffer(await file!.arrayBuffer());
+				const mimes = { png: 'image/png', bmp: 'image/bmp', gif: 'image/gif', jpeg: 'image/jpeg', tiff: 'image/tiff' } as const;
+				await this.env.R2.put(id, await image.getBuffer(mimes[format]));
+			});
+		}
+	}
+}
+
+app.post('/upload', async (c) => {
+	const query = qs.parse(c.req.url.split('?')[1], {
+		decoder(v) {
+			if (/^(\d+|\d*\.\d+)$/.test(v)) return parseFloat(v);
+			return v;
+		},
+	});
+	const { data: options, error } = Options.safeParse(query);
+	if (error) return c.json(error);
+
+	const body = await c.req.parseBody();
+	const file = body[Object.keys(body)[0]] as File;
+	const id = await crypto.randomUUID();
+	await c.env.R2.put(id, file);
+
+	let instance = await c.env.OPTIMIZER.create({ params: { options, filetype: file.type }, id });
+	return Response.json({
+		id: instance.id,
+		details: await instance.status(),
+	});
+});
+export default app;

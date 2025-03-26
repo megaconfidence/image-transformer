@@ -7,16 +7,27 @@
 	"name": "image-optimizer",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-03-21",
-	"compatibility_flags": [
-		"nodejs_compat"
-	],
+	"compatibility_flags": ["nodejs_compat"],
 	"assets": {
 		"binding": "ASSETS",
-		"directory": "./public"
+		"directory": "./public",
 	},
 	"observability": {
-		"enabled": true
-	}
+		"enabled": true,
+	},
+	"r2_buckets": [
+		{
+			"bucket_name": "image-optimizer",
+			"binding": "R2",
+		},
+	],
+	"workflows": [
+		{
+			"name": "image-optimizer",
+			"binding": "OPTIMIZER",
+			"class_name": "Optimizer",
+		},
+	],
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
