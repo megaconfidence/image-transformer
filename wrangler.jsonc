@@ -24,8 +24,8 @@
 	"workflows": [
 		{
 			"name": "image-transformer",
-			"binding": "OPTIMIZER",
-			"class_name": "Optimizer",
+			"binding": "TRANSFORMER",
+			"class_name": "Transformer",
 		},
 	],
 	/**

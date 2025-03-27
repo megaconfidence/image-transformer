@@ -256,6 +256,7 @@ async function transformImage() {
 	}
 
 	const res = await response.json();
+	const jobid = res.id;
 
 	// Show loading animation in the transformed preview
 	transformedPreview.innerHTML = `
@@ -265,7 +266,7 @@ async function transformImage() {
       <div class="loading-progress">
         <div class="loading-bar"></div>
       </div>
-      <p class="loading-subtext">This may take up to 5 seconds</p>
+      <p class="loading-subtext">This may take a few seconds</p>
     </div>
   `;
 
@@ -280,11 +281,25 @@ async function transformImage() {
 	}
 
 	// Add 5 second delay
-	await new Promise((resolve) => setTimeout(resolve, 5000));
+	// await new Promise((resolve) => setTimeout(resolve, 5000));
+	let intervalid;
+	await new Promise((resolve, reject) => {
+		intervalid = setInterval(async () => {
+			const response = await fetch(`/status/${jobid}`);
+			if (!response.ok) {
+				clearInterval(intervalid);
+				reject(response.status);
+			}
+			const res = await response.json();
+			if (res.status === 'complete') {
+				clearInterval(intervalid);
+				resolve(res.status);
+			}
+		}, 3000);
+	});
 
 	// Fetch the transformed image
-	const imgid = res.id;
-	const viewResponse = await fetch(`/view/${imgid}`);
+	const viewResponse = await fetch(`/view/${jobid}`);
 	if (!viewResponse.ok) {
 		throw new Error(`Error fetching transformed image: ${viewResponse.status}`);
 	}
@@ -319,6 +334,8 @@ function buildTransformUrl() {
 	// Add format parameter
 	if (!_.isEqual(transformOptions.format, transfromDefaults.format)) {
 		params.append('format', transformOptions.format);
+	} else {
+		transformOptions.format = selectedFile.type.split('/')[1];
 	}
 
 	// Add filter parameters

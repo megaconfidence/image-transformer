@@ -6,17 +6,25 @@ import { WorkflowEntrypoint, WorkflowStep, WorkflowEvent } from 'cloudflare:work
 
 type Bindings = {
 	R2: R2Bucket;
-	OPTIMIZER: Workflow;
+	TRANSFORMER: Workflow;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
-
-app.get('/', (c) => c.text('Hono!'));
 
 app.get('/view/:id', async (c) => {
 	const id = c.req.param('id');
 	const file = await c.env.R2.get(id);
 	return new Response(file!.body);
+});
+
+app.get('/status/:id', async (c) => {
+	const id = c.req.param('id');
+	try {
+		let instance = await c.env.TRANSFORMER.get(id);
+		return c.json({ ...(await instance.status()) });
+	} catch (error: any) {
+		return c.json({ error: error.message });
+	}
 });
 
 const Options = z.object({
@@ -29,7 +37,7 @@ const Options = z.object({
 
 type Payload = { options: z.infer<typeof Options>; filetype: 'image/png' | 'image/bmp' | 'image/gif' | 'image/jpeg' | 'image/tiff' };
 
-export class Optimizer extends WorkflowEntrypoint<Env, Payload> {
+export class Transformer extends WorkflowEntrypoint<Env, Payload> {
 	async run(event: WorkflowEvent<Payload>, step: WorkflowStep) {
 		const id = event.instanceId;
 		const filetype = event.payload.filetype;
@@ -85,7 +93,7 @@ app.post('/upload', async (c) => {
 	await c.env.R2.put(id, file);
 	console.log({ filetype: file.type, ...options });
 
-	let instance = await c.env.OPTIMIZER.create({ params: { options, filetype: file.type }, id });
+	let instance = await c.env.TRANSFORMER.create({ params: { options, filetype: file.type }, id });
 	return Response.json({
 		id: instance.id,
 		details: await instance.status(),
