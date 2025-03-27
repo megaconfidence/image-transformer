@@ -284,7 +284,7 @@ async function transformImage() {
 
 	// Fetch the transformed image
 	const imgid = res.id;
-	const viewResponse = await fetch(`http://localhost:8787/view/${imgid}`);
+	const viewResponse = await fetch(`/view/${imgid}`);
 	if (!viewResponse.ok) {
 		throw new Error(`Error fetching transformed image: ${viewResponse.status}`);
 	}
@@ -307,11 +307,10 @@ async function transformImage() {
 }
 
 function buildTransformUrl() {
-	const baseUrl = 'http://localhost:8787/upload';
+	const baseUrl = '/upload';
 	const params = new URLSearchParams();
 
 	// Add resize parameters
-	console.log(transformOptions.resize, transfromDefaults.resize);
 	if (!_.isEqual(transformOptions.resize, transfromDefaults.resize)) {
 		params.append('resize[w]', transformOptions.resize.width);
 		params.append('resize[h]', transformOptions.resize.height);
