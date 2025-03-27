@@ -3,29 +3,175 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Hello, World!</title>
+		<title>Image Transformer</title>
+		<meta name="description" content="Upload, transform, and convert your images with ease" />
+		<link rel="stylesheet" href="styles.css" />
+		<script src="lodash.min.js"></script>
 	</head>
-	<body>
-		<h1 id="heading"></h1>
-		<button id="button">Fetch a random UUID</button>
-		<div id="random"></div>
-		<script>
-			fetch('/message')
-				.then((resp) => resp.text())
-				.then((text) => {
-					const h1 = document.getElementById('heading');
-					h1.textContent = text;
-				});
 
-			const button = document.getElementById("button");
-			button.addEventListener("click", () => {
-				fetch('/random')
-					.then((resp) => resp.text())
-					.then((text) => {
-						const random = document.getElementById('random');
-						random.textContent = text;
-					});
-			});
-		</script>
+	<body>
+		<div class="container">
+			<header class="header">
+				<div class="logo">
+					<div class="logo-icon">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<path d="M15 3h6v6M9 21H3v-6M3.6 3.6l16.8 16.8M21 3l-6 6M3 21l6-6" />
+						</svg>
+					</div>
+					<div class="logo-text">
+						<h1>ImageTransform</h1>
+						<p>Powerful image editing tools</p>
+					</div>
+				</div>
+			</header>
+
+			<main class="main-content">
+				<div class="intro">
+					<h1>Image Transformer</h1>
+					<p>Upload, transform, and convert your images with ease. Resize dimensions, apply filters, and save in your preferred format.</p>
+				</div>
+
+				<div class="image-transformer">
+					<div class="grid-layout">
+						<div class="col">
+							<div class="file-uploader">
+								<div class="upload-area" id="uploadArea">
+									<input type="file" id="fileInput" accept="image/*" hidden />
+									<div class="upload-icon">
+										<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon">
+											<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+											<circle cx="8.5" cy="8.5" r="1.5"></circle>
+											<polyline points="21 15 16 10 5 21"></polyline>
+										</svg>
+									</div>
+									<p class="upload-title">Drag & drop or click to upload</p>
+									<p class="upload-subtitle">Supports JPG, PNG, GIF, BMP, TIFF</p>
+								</div>
+							</div>
+
+							<div class="image-preview">
+								<div class="preview-header">
+									<h3>Original Image</h3>
+								</div>
+								<div class="preview-container" id="originalPreview">
+									<p class="no-image-text">No image to preview</p>
+								</div>
+							</div>
+						</div>
+
+						<div class="col">
+							<div class="transform-controls">
+								<div class="card">
+									<div class="card-header">
+										<h2>Transform Options</h2>
+									</div>
+									<div class="card-content">
+										<div class="tabs">
+											<div class="tabs-list" id="tabsList">
+												<button class="tab-trigger active" data-tab="resize">Resize</button>
+												<button class="tab-trigger" data-tab="filter">Filters</button>
+												<button class="tab-trigger" data-tab="format">Format</button>
+											</div>
+
+											<div class="tab-content active" id="resizeTab">
+												<div class="control-group">
+													<div class="control-header">
+														<label for="widthSlider">Width (px)</label>
+														<span class="value" id="widthValue">1</span>
+													</div>
+													<input type="range" id="widthSlider" min="1" max="2000" value="1" class="slider" />
+												</div>
+
+												<div class="control-group">
+													<div class="control-header">
+														<label for="heightSlider">Height (px)</label>
+														<span class="value" id="heightValue">1</span>
+													</div>
+													<input type="range" id="heightSlider" min="1" max="2000" value="1" class="slider" />
+												</div>
+											</div>
+
+											<div class="tab-content" id="filterTab">
+												<div class="control-group switch-group">
+													<label for="greyscaleToggle" class="switch-label">Greyscale</label>
+													<label class="switch">
+														<input type="checkbox" id="greyscaleToggle" />
+														<span class="switch-slider"></span>
+													</label>
+												</div>
+
+												<div class="control-group">
+													<div class="control-header">
+														<label for="hueSlider">Hue</label>
+														<span class="value" id="hueValue">1</span>
+													</div>
+													<input type="range" id="hueSlider" min="1" max="100" value="1" class="slider" />
+												</div>
+
+												<div class="control-group">
+													<div class="control-header">
+														<label for="saturateSlider">Saturation</label>
+														<span class="value" id="saturateValue">1</span>
+													</div>
+													<input type="range" id="saturateSlider" min="1" max="100" value="1" class="slider" />
+												</div>
+											</div>
+
+											<div class="tab-content" id="formatTab">
+												<div class="control-group">
+													<label>Output Format</label>
+													<div class="button-group" id="formatButtons">
+														<button class="format-button active" data-format="png">PNG</button>
+														<button class="format-button" data-format="jpeg">JPEG</button>
+														<button class="format-button" data-format="gif">GIF</button>
+														<button class="format-button" data-format="bmp">BMP</button>
+														<button class="format-button" data-format="tiff">TIFF</button>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="action-buttons">
+								<button id="transformButton" class="primary-button" disabled>
+									<span>Transform</span>
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon">
+										<path d="M5 12h14M12 5l7 7-7 7" />
+									</svg>
+								</button>
+
+								<button id="downloadButton" class="secondary-button" disabled>
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon">
+										<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+										<polyline points="7 10 12 15 17 10" />
+										<line x1="12" y1="15" x2="12" y2="3" />
+									</svg>
+									<span>Download</span>
+								</button>
+							</div>
+
+							<div class="image-preview">
+								<div class="preview-header">
+									<h3>Transformed Image</h3>
+								</div>
+								<div class="preview-container" id="transformedPreview">
+									<p class="no-image-text">No image to preview</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</main>
+
+			<footer class="footer">
+				<p>Designed with precision and simplicity. © <span id="currentYear"></span></p>
+			</footer>
+		</div>
+
+		<div class="toast-container" id="toastContainer"></div>
+
+		<script src="script.js"></script>
 	</body>
 </html>

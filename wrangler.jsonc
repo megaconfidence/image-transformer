@@ -4,7 +4,7 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "image-optimizer",
+	"name": "image-transformer",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-03-21",
 	"compatibility_flags": ["nodejs_compat"],
@@ -17,13 +17,13 @@
 	},
 	"r2_buckets": [
 		{
-			"bucket_name": "image-optimizer",
+			"bucket_name": "image-transformer",
 			"binding": "R2",
 		},
 	],
 	"workflows": [
 		{
-			"name": "image-optimizer",
+			"name": "image-transformer",
 			"binding": "OPTIMIZER",
 			"class_name": "Optimizer",
 		},

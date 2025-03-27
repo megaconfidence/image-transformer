@@ -37,7 +37,7 @@ export class Optimizer extends WorkflowEntrypoint<Env, Payload> {
 			await step.do('resize image', async () => {
 				const file = await this.env.R2.get(id);
 				const image = await Jimp.fromBuffer(await file!.arrayBuffer());
-				await image.resize(resize);
+				image.resize(resize);
 				await this.env.R2.put(id, await image.getBuffer(filetype));
 			});
 		}
@@ -50,7 +50,8 @@ export class Optimizer extends WorkflowEntrypoint<Env, Payload> {
 					const fValue = (filter as any)[n];
 					return { apply: n, params: fValue ? [fValue] : undefined };
 				}) as any;
-				await image.color(fOptions);
+				console.log(fOptions);
+				image.color(fOptions);
 				await this.env.R2.put(id, await image.getBuffer(filetype));
 			});
 		}
@@ -78,8 +79,9 @@ app.post('/upload', async (c) => {
 
 	const body = await c.req.parseBody();
 	const file = body[Object.keys(body)[0]] as File;
-	const id = await crypto.randomUUID();
+	const id = crypto.randomUUID();
 	await c.env.R2.put(id, file);
+	console.log({ filetype: file.type, ...options });
 
 	let instance = await c.env.OPTIMIZER.create({ params: { options, filetype: file.type }, id });
 	return Response.json({
