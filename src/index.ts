@@ -20,9 +20,11 @@ app.get('/view/:id', async (c) => {
 });
 
 const Options = z.object({
-	resize: z.object({ w: z.number(), h: z.number() }).optional(),
+	resize: z.object({ w: z.number().gte(1), h: z.number().gte(1) }).optional(),
 	format: z.enum(['bmp', 'gif', 'jpeg', 'png', 'tiff']).optional(),
-	filter: z.object({ greyscale: z.string().optional(), hue: z.number().optional(), saturate: z.number().optional() }).optional(),
+	filter: z
+		.object({ greyscale: z.string().optional(), hue: z.number().gte(1).optional(), saturate: z.number().gte(1).optional() })
+		.optional(),
 });
 
 type Payload = { options: z.infer<typeof Options>; filetype: 'image/png' | 'image/bmp' | 'image/gif' | 'image/jpeg' | 'image/tiff' };
