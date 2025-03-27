@@ -23,7 +23,7 @@ app.get('/status/:id', async (c) => {
 		let instance = await c.env.TRANSFORMER.get(id);
 		return c.json({ ...(await instance.status()) });
 	} catch (error: any) {
-		return c.json({ error: error.message });
+		return c.json({ status: 'errored', error: error.message });
 	}
 });
 

@@ -277,26 +277,40 @@ async function transformImage() {
 		setTimeout(() => {
 			loadingBar.style.width = '100%';
 			loadingBar.style.transition = 'width 5s linear';
-		}, 50);
+		}, 500);
 	}
 
-	// Add 5 second delay
-	// await new Promise((resolve) => setTimeout(resolve, 5000));
-	let intervalid;
-	await new Promise((resolve, reject) => {
-		intervalid = setInterval(async () => {
-			const response = await fetch(`/status/${jobid}`);
-			if (!response.ok) {
-				clearInterval(intervalid);
-				reject(response.status);
-			}
-			const res = await response.json();
-			if (res.status === 'complete') {
-				clearInterval(intervalid);
-				resolve(res.status);
-			}
-		}, 3000);
-	});
+	// Check for image status
+	try {
+		let intervalid;
+		await new Promise((resolve, reject) => {
+			intervalid = setInterval(async () => {
+				const response = await fetch(`/status/${jobid}`);
+				if (!response.ok) {
+					clearInterval(intervalid);
+					reject(response.status);
+				}
+				const res = await response.json();
+				switch (res.status) {
+					case 'complete':
+						clearInterval(intervalid);
+						resolve(res.status);
+						break;
+					case 'paused':
+					case 'errored':
+					case 'unknown':
+					case 'terminated':
+						clearInterval(intervalid);
+						reject(res.status);
+						break;
+					default:
+						break;
+				}
+			}, 3000);
+		});
+	} catch (error) {
+		showToast('Error', error.message, 'error');
+	}
 
 	// Fetch the transformed image
 	const viewResponse = await fetch(`/view/${jobid}`);
