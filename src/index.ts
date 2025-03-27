@@ -29,13 +29,13 @@ app.get('/status/:id', async (c) => {
 
 const Options = z.object({
 	resize: z.object({ w: z.number().gte(1), h: z.number().gte(1) }).optional(),
-	format: z.enum(['bmp', 'gif', 'jpeg', 'png', 'tiff']).optional(),
+	format: z.enum(['bmp', 'gif', 'jpeg', 'png']).optional(),
 	filter: z
 		.object({ greyscale: z.string().optional(), hue: z.number().gte(1).optional(), saturate: z.number().gte(1).optional() })
 		.optional(),
 });
 
-type Payload = { options: z.infer<typeof Options>; filetype: 'image/png' | 'image/bmp' | 'image/gif' | 'image/jpeg' | 'image/tiff' };
+type Payload = { options: z.infer<typeof Options>; filetype: 'image/png' | 'image/bmp' | 'image/gif' | 'image/jpeg' };
 
 export class Transformer extends WorkflowEntrypoint<Env, Payload> {
 	async run(event: WorkflowEvent<Payload>, step: WorkflowStep) {
