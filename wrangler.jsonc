@@ -28,6 +28,9 @@
 			"class_name": "Transformer",
 		},
 	],
+	"limits": {
+		"cpu_ms": 300000,
+	},
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
