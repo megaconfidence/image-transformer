@@ -73,12 +73,20 @@ body {
 	background-color: var(--background);
 	backdrop-filter: blur(8px);
 	z-index: 10;
+	display: flex;
+	justify-content: space-between;
+	flex-wrap: wrap;
 }
 
 .logo {
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
+}
+
+.github-link {
+	max-width: 20%;
+	text-decoration: none;
 }
 
 .logo-icon {
@@ -660,6 +668,15 @@ input:checked + .switch-slider:before {
 
 	.action-buttons {
 		flex-direction: column;
+	}
+
+	.github-link {
+		max-width: unset;
+		margin-top: 10px;
+	}
+
+	.logo {
+		margin-right: 20px;
 	}
 }
 
