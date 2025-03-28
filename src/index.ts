@@ -1,7 +1,7 @@
 import qs from 'qs';
 import { Hono } from 'hono';
 import { Options, Bindings } from './types';
-export { Transformer } from './transformer';
+export { Transformer } from './transformer.alt';
 
 const app = new Hono<{ Bindings: Bindings }>();
 
