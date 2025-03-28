@@ -34,7 +34,7 @@ export class Transformer extends WorkflowEntrypoint<Env, Payload> {
 			await step.do('format image', async () => {
 				const file = await this.env.R2.get(id);
 				const image = await Jimp.fromBuffer(await file!.arrayBuffer());
-				const mimes = { png: 'image/png', bmp: 'image/bmp', gif: 'image/gif', jpeg: 'image/jpeg', tiff: 'image/tiff' } as const;
+				const mimes = { png: 'image/png', bmp: 'image/bmp', gif: 'image/gif', jpeg: 'image/jpeg' } as const;
 				await this.env.R2.put(id, await image.getBuffer(mimes[format]));
 			});
 		}

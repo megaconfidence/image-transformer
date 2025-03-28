@@ -33,17 +33,11 @@ export class Transformer extends WorkflowEntrypoint<Env, Payload> {
 		if (format) {
 			await step.do('format image', async () => {
 				const image = await Jimp.fromBuffer(file);
-				const mimes = { png: 'image/png', bmp: 'image/bmp', gif: 'image/gif', jpeg: 'image/jpeg', tiff: 'image/tiff' } as const;
+				const mimes = { png: 'image/png', bmp: 'image/bmp', gif: 'image/gif', jpeg: 'image/jpeg' } as const;
 				file = await image.getBuffer(fileType);
 			});
 		}
 
 		await this.env.R2.put(id, file);
-
-		await step.sleep('wait for 1 hour', '1 hour');
-
-		await step.do('delete image', async () => {
-			await this.env.R2.delete(id);
-		});
 	}
 }
