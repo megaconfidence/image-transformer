@@ -292,6 +292,7 @@ async function transformImage() {
 				}
 				const res = await response.json();
 				switch (res.status) {
+					case 'waiting':
 					case 'complete':
 						clearInterval(intervalid);
 						resolve(res.status);
